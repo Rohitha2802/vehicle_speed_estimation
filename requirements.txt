@@ -1,0 +1,11 @@
+ultralytics
+opencv-python
+numpy
+torch
+scipy
+filterpy
+deep-sort-realtime
+fastapi
+uvicorn
+python-multipart
+websockets
