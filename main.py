@@ -3,13 +3,13 @@ import argparse
 import numpy as np
 import time
 
-from modules.vehicle_detection import VehicleDetector
-from modules.vehicle_tracking import VehicleTracker
-from modules.speed_estimation import SpeedEstimator
-from modules.noise_filtering import TrajectorySmoother
-from modules.behavior_analysis import BehaviorAnalyzer
-from modules.risk_prediction import RiskPredictor
-from modules.benchmarking import PerformanceMonitor
+from backend.modules.vehicle_detection import VehicleDetector
+from backend.modules.vehicle_tracking import VehicleTracker
+from backend.modules.speed_estimation import SpeedEstimator
+from backend.modules.noise_filtering import TrajectorySmoother
+from backend.modules.behavior_analysis import BehaviorAnalyzer
+from backend.modules.risk_prediction import RiskPredictor
+from backend.modules.benchmarking import PerformanceMonitor
 
 def main(source, model_path):
     # Initialize modules

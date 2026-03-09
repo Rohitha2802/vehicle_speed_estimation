@@ -1,0 +1,282 @@
+/* AccidentsDashboard — mirrors ViolationsDashboard with accident-themed colours */
+
+.accidents-page {
+    padding: 28px 32px;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+/* ── Header ────────────────────────────────────────────────────────────────── */
+.accidents-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.accidents-header h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-main);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+}
+
+.accidents-total-badge {
+    background: linear-gradient(135deg, #b84a00, #e06c00);
+    color: #fff;
+    font-size: 0.8rem;
+    font-weight: 700;
+    padding: 2px 9px;
+    border-radius: 999px;
+    min-width: 22px;
+    text-align: center;
+}
+
+/* ── Controls ──────────────────────────────────────────────────────────────── */
+.accidents-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+}
+
+.accidents-search {
+    flex: 1;
+    min-width: 200px;
+    padding: 8px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    background: var(--card-bg);
+    color: var(--text-main);
+    font-size: 0.9rem;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.accidents-search:focus {
+    border-color: #e06c00;
+}
+
+.accidents-sort {
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    background: var(--card-bg);
+    color: var(--text-main);
+    font-size: 0.9rem;
+    cursor: pointer;
+    outline: none;
+}
+
+/* ── Table ─────────────────────────────────────────────────────────────────── */
+.accidents-table-wrapper {
+    overflow-x: auto;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+}
+
+.accidents-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+}
+
+.accidents-table thead tr {
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.accidents-table th {
+    padding: 12px 14px;
+    text-align: left;
+    font-weight: 600;
+    color: var(--text-dim);
+    font-size: 0.78rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border-color);
+    white-space: nowrap;
+}
+
+.accidents-table td {
+    padding: 11px 14px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    vertical-align: middle;
+    color: var(--text-main);
+}
+
+.accidents-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.accidents-table tbody tr:hover {
+    background: rgba(255, 255, 255, 0.025);
+}
+
+/* ── New-row flash ─────────────────────────────────────────────────────────── */
+.accidents-table tbody tr.new-row {
+    animation: acc-flash 2.5s ease-out;
+}
+
+@keyframes acc-flash {
+    0% {
+        background: rgba(224, 108, 0, 0.2);
+    }
+
+    100% {
+        background: transparent;
+    }
+}
+
+/* ── Chips ─────────────────────────────────────────────────────────────────── */
+.vehicle-ids-chip {
+    display: inline-block;
+    background: linear-gradient(135deg, rgba(184, 74, 0, 0.25), rgba(224, 108, 0, 0.18));
+    border: 1px solid rgba(224, 108, 0, 0.45);
+    color: #ff9a50;
+    font-size: 0.82rem;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 999px;
+}
+
+.signal-chip {
+    display: inline-block;
+    background: rgba(255, 100, 0, 0.15);
+    border: 1px solid rgba(255, 100, 0, 0.3);
+    color: #ffb07a;
+    font-size: 0.76rem;
+    padding: 2px 7px;
+    border-radius: 4px;
+    margin: 1px 2px;
+    white-space: nowrap;
+}
+
+/* ── Shared reusable classes (mirrors ViolationsDashboard) ─────────────────── */
+.snapshot-thumb {
+    width: 64px;
+    height: 44px;
+    object-fit: cover;
+    border-radius: 6px;
+    cursor: pointer;
+    border: 1px solid var(--border-color);
+    transition: transform 0.18s, box-shadow 0.18s;
+}
+
+.snapshot-thumb:hover {
+    transform: scale(1.08);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+}
+
+.no-snapshot {
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    font-style: italic;
+}
+
+/* ── States ────────────────────────────────────────────────────────────────── */
+.accidents-loading,
+.accidents-empty {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-dim);
+}
+
+.accidents-loading .spinner {
+    width: 36px;
+    height: 36px;
+    border: 3px solid rgba(255, 255, 255, 0.1);
+    border-top-color: #e06c00;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    margin: 0 auto 14px;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.accidents-empty .empty-icon {
+    font-size: 2.8rem;
+    margin-bottom: 12px;
+}
+
+/* ── Lightbox ──────────────────────────────────────────────────────────────── */
+.lightbox-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    background: rgba(0, 0, 0, 0.82);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(4px);
+}
+
+.lightbox-inner {
+    position: relative;
+    max-width: 90vw;
+    max-height: 90vh;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.7);
+}
+
+.lightbox-inner img {
+    display: block;
+    max-width: 90vw;
+    max-height: 85vh;
+    object-fit: contain;
+}
+
+.lightbox-close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(0, 0, 0, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #fff;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+}
+
+.lightbox-close:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+/* ── Live dot ──────────────────────────────────────────────────────────────── */
+.live-dot {
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #e06c00;
+    margin-right: 5px;
+    animation: blink 1.2s ease-in-out infinite;
+}
+
+@keyframes blink {
+
+    0%,
+    100% {
+        opacity: 1
+    }
+
+    50% {
+        opacity: 0.3
+    }
+}

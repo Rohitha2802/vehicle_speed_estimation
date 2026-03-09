@@ -1,0 +1,173 @@
+/* Speed Limit Selector Component */
+.speed-limit-selector {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1rem;
+    background-color: rgba(255, 255, 255, 0.03);
+    border-radius: 8px;
+    border: 1px solid #333;
+}
+
+.speed-limit-label {
+    font-size: 1rem;
+    font-weight: bold;
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+}
+
+.speed-limit-input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.input-label {
+    font-size: 0.85rem;
+    color: var(--text-dim);
+    font-weight: 500;
+}
+
+/* Dropdown Styling */
+.speed-limit-dropdown {
+    padding: 0.7rem;
+    background-color: var(--surface-color);
+    color: var(--text-main);
+    border: 1px solid #444;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.speed-limit-dropdown:hover {
+    border-color: var(--primary-color);
+}
+
+.speed-limit-dropdown:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(0, 230, 118, 0.2);
+}
+
+/* Custom Speed Input */
+.custom-speed-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.speed-limit-input {
+    flex: 1;
+    padding: 0.7rem;
+    padding-right: 4rem;
+    background-color: var(--surface-color);
+    color: var(--text-main);
+    border: 1px solid #444;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+}
+
+.speed-limit-input:hover {
+    border-color: var(--primary-color);
+}
+
+.speed-limit-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(0, 230, 118, 0.2);
+}
+
+.speed-limit-input.error {
+    border-color: var(--alert-color);
+}
+
+.speed-limit-input.error:focus {
+    box-shadow: 0 0 0 2px rgba(255, 23, 68, 0.2);
+}
+
+/* Remove number input arrows */
+.speed-limit-input::-webkit-inner-spin-button,
+.speed-limit-input::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.speed-limit-input[type=number] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
+
+.speed-unit {
+    position: absolute;
+    right: 1rem;
+    color: var(--text-dim);
+    font-size: 0.85rem;
+    pointer-events: none;
+}
+
+/* Error Message */
+.speed-limit-error {
+    color: var(--alert-color);
+    font-size: 0.8rem;
+    margin-top: 0.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.speed-limit-error::before {
+    content: '⚠';
+    font-size: 1rem;
+}
+
+/* Current Speed Display */
+.current-speed-display {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.8rem;
+    background: linear-gradient(135deg, rgba(0, 230, 118, 0.1) 0%, rgba(0, 230, 118, 0.05) 100%);
+    border-radius: 6px;
+    border: 1px solid rgba(0, 230, 118, 0.3);
+    margin-top: 0.5rem;
+}
+
+.current-speed-label {
+    font-size: 0.9rem;
+    color: var(--text-dim);
+    font-weight: 500;
+}
+
+.current-speed-value {
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: var(--primary-color);
+    letter-spacing: 0.5px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .speed-limit-selector {
+        padding: 0.8rem;
+    }
+
+    .speed-limit-label {
+        font-size: 0.9rem;
+    }
+
+    .speed-limit-dropdown,
+    .speed-limit-input {
+        font-size: 0.85rem;
+        padding: 0.6rem;
+    }
+
+    .current-speed-display {
+        padding: 0.6rem;
+    }
+
+    .current-speed-value {
+        font-size: 1rem;
+    }
+}

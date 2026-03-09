@@ -1,58 +1,13 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Intelligent Vehicle Monitoring</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
-    <header>
-        <h1>Intelligent Vehicle Monitoring System</h1>
-        <div class="status">
-            <span class="status-indicator" id="statusIndicator"></span>
-            <span id="statusText">Disconnected</span>
-        </div>
-    </header>
-
-    <main>
-        <aside>
-            <div class="control-group">
-                <label for="videoInput">Upload Video</label>
-                <input type="file" id="videoInput" accept="video/*" style="display:none">
-                <button class="btn-upload" onclick="document.getElementById('videoInput').click()">Select Video</button>
-                <span id="fileName" style="font-size: 0.8rem; color: #888;">No file selected</span>
-            </div>
-            
-            <div class="control-group">
-                <button id="btnStart" class="btn-start" disabled>Start Processing</button>
-                <button id="btnStop" class="btn-stop" disabled>Stop</button>
-            </div>
-
-            <div class="stats-panel">
-                <h3>Live Stats</h3>
-                <div class="stat-item">
-                    <span>FPS:</span>
-                    <span id="fpsValue" class="stat-value">0.0</span>
-                </div>
-                <div class="stat-item">
-                    <span>Active Vehicles:</span>
-                    <span id="vehicleCount" class="stat-value">0</span>
-                </div>
-            </div>
-            
-            <div class="alerts-container" id="alertsContainer">
-                <!-- Alerts will appear here -->
-            </div>
-        </aside>
-
-        <section class="video-container">
-            <img id="videoFeed" src="" alt="Video Stream">
-            <div class="overlay-info" id="overlayInfo" style="display: none;">Processing...</div>
-            <div id="placeholderText" style="color: #666;">Select a video and start processing</div>
-        </section>
-    </main>
-
-    <script src="app.js"></script>
-</body>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
 </html>

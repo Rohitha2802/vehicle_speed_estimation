@@ -31,8 +31,13 @@ class VehicleTracker:
             x1, y1, x2, y2, conf, cls_id = det
             w = x2 - x1
             h = y2 - y1
-            # DeepSORT expects [left, top, w, h]
-            formatted_detections.append([[x1, y1, w, h], conf, cls_id])
+            
+            # Map YOLO class IDs to human readable names
+            class_map = {2: "Car", 3: "Motorcycle", 5: "Bus", 7: "Truck"}
+            class_name = class_map.get(int(cls_id), "Unknown")
+            
+            # DeepSORT expects [left, top, w, h], confidence, class
+            formatted_detections.append([[x1, y1, w, h], conf, class_name])
 
         # Update tracker
         tracks = self.tracker.update_tracks(formatted_detections, frame=frame)
