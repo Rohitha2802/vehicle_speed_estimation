@@ -1,0 +1,12 @@
+cff-version: 1.2.0
+message: "If you use this software in your academic work, please cite it as below."
+authors:
+  - family-names: "Doe"
+    given-names: "John"
+    orcid: "https://orcid.org/0000-0000-0000-0000"
+title: "Intelligent Vehicle Monitoring System using YOLOv9 and DeepSORT"
+version: 1.1.0
+date-released: 2026-03-10
+url: "https://github.com/Rohitha2802/vehicle_speed_estimation"
+repository-code: "https://github.com/Rohitha2802/vehicle_speed_estimation"
+license: AGPL-3.0

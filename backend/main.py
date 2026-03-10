@@ -9,8 +9,15 @@ import traceback
 from fastapi import FastAPI, WebSocket, UploadFile, File, WebSocketDisconnect, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from pathlib import Path
 from typing import Optional
+import sys
+from pathlib import Path
+
+# Add the parent directory (project root) to sys.path so 'backend.modules...' works
+# even when uvicorn is run from inside the 'backend' folder
+project_root = str(Path(__file__).resolve().parents[1])
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
 
 # Import our modules
 from backend.modules.vehicle_detection import VehicleDetector
@@ -20,12 +27,10 @@ from backend.modules.noise_filtering import TrajectorySmoother
 from backend.modules.behavior_analysis import BehaviorAnalyzer
 from backend.modules.risk_prediction import RiskPredictor
 from backend.modules.benchmarking import PerformanceMonitor
-from backend.modules.accident_detection import AccidentDetector
 from backend.modules.violations_db import (
     init_db,
     add_violation, upsert_violation, get_all_violations, get_violations_by_vehicle,
     delete_violation, delete_all_violations,
-    add_accident, get_all_accidents, delete_accident, delete_all_accidents,
 )
 
 app = FastAPI()
@@ -39,7 +44,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-UPLOAD_DIR = Path("backend/uploads")
+UPLOAD_DIR = Path(__file__).resolve().parent / "uploads"
 UPLOAD_DIR.mkdir(exist_ok=True)
 
 # --- Initialize Global Models ---
@@ -134,32 +139,6 @@ async def api_clear_all_violations():
     count = delete_all_violations()
     return {"message": f"Successfully deleted {count} violations.", "deleted_count": count}
 
-
-# ─────────────────────────────────────────────────────────────────────────────
-# REST API — Accidents CRUD
-# ─────────────────────────────────────────────────────────────────────────────
-
-@app.get("/api/accidents")
-async def api_get_all_accidents():
-    """Fetch all stored accident records (newest first)."""
-    return get_all_accidents()
-
-
-@app.delete("/api/accidents/{accident_id}")
-async def api_delete_accident(accident_id: int):
-    """Delete an accident record by ID."""
-    deleted = delete_accident(accident_id)
-    if not deleted:
-        raise HTTPException(status_code=404, detail="Accident not found")
-    return {"message": "Accident deleted", "id": accident_id}
-
-
-@app.delete("/api/accidents")
-async def api_clear_all_accidents():
-    """Delete all accident records."""
-    count = delete_all_accidents()
-    return {"message": f"Successfully deleted {count} accident records.", "deleted_count": count}
-
 # ─────────────────────────────────────────────────────────────────────────────
 # WebSocket — Real-time Video Processing
 # ─────────────────────────────────────────────────────────────────────────────
@@ -212,12 +191,12 @@ async def websocket_endpoint(websocket: WebSocket):
         behavior_analyzer = BehaviorAnalyzer()
         risk_predictor = RiskPredictor()
         monitor = PerformanceMonitor()
-        accident_detector = AccidentDetector()
         # Violation deduplication: vehicle_id -> max speed recorded
         violation_max_speeds: dict[int, float] = {}
-        # Per-track histories for accident detection
-        speed_histories: dict[int, list] = {}
-        position_histories: dict[int, list] = {}
+        # Track IDs to frequency of detected classes to smooth out YOLO misclassifications
+        vehicle_types_cache: dict[int, dict[str, int]] = {}
+        # Track IDs to set of string flags they have already alerted for to prevent spam
+        sent_alerts_cache: dict[int, set[str]] = {}
 
         while True:
             # Wait for start command with filename
@@ -255,10 +234,10 @@ async def websocket_endpoint(websocket: WebSocket):
                     continue
 
                 # Reset tracking state for new video session
+                tracker = VehicleTracker()
                 violation_max_speeds.clear()
-                speed_histories.clear()
-                position_histories.clear()
-                accident_detector.collision_frames.clear()
+                vehicle_types_cache.clear()
+                sent_alerts_cache.clear()
 
                 try:
                     import time
@@ -302,10 +281,21 @@ async def websocket_endpoint(websocket: WebSocket):
                                 cx, cy = (x1 + x2) / 2, (y1 + y2) / 2
                                 
                                 # Extract vehicle type from DeepSORT track
-                                vehicle_type = getattr(track, 'det_class', None)
-                                if vehicle_type is None and hasattr(track, 'get_det_class'):
-                                    vehicle_type = track.get_det_class()
-                                if not vehicle_type:
+                                current_class = getattr(track, 'det_class', None)
+                                if current_class is None and hasattr(track, 'get_det_class'):
+                                    current_class = track.get_det_class()
+                                    
+                                if current_class and current_class != "Unknown":
+                                    track_id_int = int(track_id)
+                                    if track_id_int not in vehicle_types_cache:
+                                        vehicle_types_cache[track_id_int] = {}
+                                    vehicle_types_cache[track_id_int][current_class] = vehicle_types_cache[track_id_int].get(current_class, 0) + 1
+                                    
+                                track_id_int = int(track_id)
+                                if track_id_int in vehicle_types_cache:
+                                    counts = vehicle_types_cache[track_id_int]
+                                    vehicle_type = max(counts, key=counts.get)
+                                else:
                                     vehicle_type = "Unknown"
 
                                 sx, sy = smoother.smooth(track_id, cx, cy)
@@ -313,15 +303,6 @@ async def websocket_endpoint(websocket: WebSocket):
 
                                 if speed is None:
                                     speed = 0.0
-
-                                # Update speed / position history for accident detection
-                                spd_hist = speed_histories.setdefault(track_id, [])
-                                pos_hist = position_histories.setdefault(track_id, [])
-                                spd_hist.append(speed)
-                                pos_hist.append((sx, sy))
-                                if len(spd_hist) > MAX_HIST:
-                                    spd_hist.pop(0)
-                                    pos_hist.pop(0)
 
                                 # ── DEBUG: log speed every 30 frames per track ──
                                 if frame_count % 30 == 0:
@@ -344,15 +325,20 @@ async def websocket_endpoint(websocket: WebSocket):
                                 }
                                 track_data.append(track_info)
 
-                                # ── Violation alert text ───────────────────────
-                                if violation:
-                                    alerts.append(
-                                        f"Vehicle {track_id}: Speed violation ({int(speed)} km/h > {speed_limit} km/h)"
-                                    )
+                                # ── Violation alert text (Spam Suppressed) ─────
+                                track_id_int = int(track_id)
+                                if track_id_int not in sent_alerts_cache:
+                                    sent_alerts_cache[track_id_int] = set()
+
+                                if violation and "Overspeed" not in sent_alerts_cache[track_id_int]:
+                                    alerts.append(f"Vehicle {track_id}: Speed violation ({int(speed)} km/h > {speed_limit} km/h)")
+                                    sent_alerts_cache[track_id_int].add("Overspeed")
 
                                 if flags:
                                     for flag in flags:
-                                        alerts.append(f"Vehicle {track_id}: {flag}")
+                                        if flag not in sent_alerts_cache[track_id_int]:
+                                            alerts.append(f"Vehicle {track_id}: {flag}")
+                                            sent_alerts_cache[track_id_int].add(flag)
 
                                 # ── Persistent violation storage ─────────────
                                 if violation:
@@ -399,62 +385,6 @@ async def websocket_endpoint(websocket: WebSocket):
                                 cv2.putText(frame, label, (x1, y1 - 10),
                                             cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
 
-                            # ── Accident Detection (after per-track loop) ──────────────
-                            accident_events = accident_detector.detect_accident(
-                                tracks, speed_histories, position_histories, frame_count
-                            )
-
-                            saved_accidents = []
-                            for event in accident_events:
-                                # ── Visualise: red overlay on union bbox ─────────
-                                ux1, uy1, ux2, uy2 = event.bbox_union
-                                h_f, w_f = frame.shape[:2]
-                                ux1 = max(0, min(ux1, w_f - 1))
-                                uy1 = max(0, min(uy1, h_f - 1))
-                                ux2 = max(0, min(ux2, w_f - 1))
-                                uy2 = max(0, min(uy2, h_f - 1))
-
-                                # Semi-transparent red fill
-                                overlay = frame.copy()
-                                cv2.rectangle(overlay, (ux1, uy1), (ux2, uy2), (0, 0, 255), -1)
-                                cv2.addWeighted(overlay, 0.3, frame, 0.7, 0, frame)
-                                # Solid red border
-                                cv2.rectangle(frame, (ux1, uy1), (ux2, uy2), (0, 0, 220), 3)
-
-                                # Red bbox on each involved vehicle
-                                for vid in event.vehicle_ids:
-                                    vid_track = next((t for t in tracks if t.track_id == vid), None)
-                                    if vid_track:
-                                        ltrb = vid_track.to_ltrb()
-                                        vx1,vy1,vx2,vy2 = map(int, ltrb)
-                                        cv2.rectangle(frame, (vx1, vy1), (vx2, vy2), (0, 0, 255), 3)
-                                        cv2.putText(frame,
-                                            f"ID:{vid} ACCIDENT",
-                                            (vx1, vy1 - 12),
-                                            cv2.FONT_HERSHEY_SIMPLEX, 0.55, (0, 0, 255), 2)
-
-                                # Banner text on frame
-                                cv2.putText(frame,
-                                    f"ACCIDENT: Vehicles {', '.join(map(str, event.vehicle_ids))}",
-                                    (10, 40), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 255), 2)
-
-                                # Capture snapshot AFTER drawing
-                                snap_b64 = _crop_vehicle_frame(frame, event.bbox_union)
-
-                                # Save to DB
-                                vehicle_ids_str = ",".join(map(str, event.vehicle_ids))
-                                signals_str = ",".join(event.signals)
-                                rec = add_accident(
-                                    vehicle_ids=vehicle_ids_str,
-                                    frame_number=frame_count,
-                                    area=area_label,
-                                    signals=signals_str,
-                                    details=event.details,
-                                    snapshot=snap_b64 if snap_b64 else None,
-                                )
-                                saved_accidents.append(rec)
-                                print(f"[ACCIDENT] Detected: Vehicles {vehicle_ids_str} | Signals: {signals_str} | Frame {frame_count}")
-
                             # ── Encode frame ───────────────────────────────────
                             current_fps = monitor.update_fps()
                             _, buffer = cv2.imencode('.jpg', frame)
@@ -474,12 +404,6 @@ async def websocket_endpoint(websocket: WebSocket):
                                 response["violation_action"] = latest["action"]
                                 response["new_violation"] = latest["record"]
                                 response["saved_violations"] = saved_violations
-
-                            # Include accident events if any
-                            if saved_accidents:
-                                response["accident_detected"] = True
-                                response["accident_event"] = saved_accidents[-1]
-                                response["accident_action"] = "inserted"
 
                             await websocket.send_text(json.dumps(response))
 

@@ -1,7 +1,7 @@
 from deep_sort_realtime.deepsort_tracker import DeepSort
 
 class VehicleTracker:
-    def __init__(self, max_age=30, n_init=3, nms_max_overlap=1.0):
+    def __init__(self, max_age=70, n_init=3, nms_max_overlap=1.0):
         """
         Initialize the Vehicle Tracker using DeepSORT.
 
@@ -10,7 +10,7 @@ class VehicleTracker:
             n_init (int): Minimum number of consecutive detections to verify a track.
             nms_max_overlap (float): NMS threshold.
         """
-        print("Initializing DeepSORT tracker...")
+        print(f"Initializing DeepSORT tracker with max_age={max_age}...")
         self.tracker = DeepSort(max_age=max_age, n_init=n_init, nms_max_overlap=nms_max_overlap)
 
     def update_tracks(self, detections, frame):

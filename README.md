@@ -1,9 +1,9 @@
 # Intelligent Vehicle Monitoring System
 
-A modular Python-based system for real-time vehicle detection, tracking, speed estimation, and behavior analysis using YOLOv8 and DeepSORT. This system supports both a Command Line Interface (CLI) for processing video files and a Web Interface for real-time interaction.
+A modular Python-based system for real-time vehicle detection, tracking, speed estimation, and behavior analysis using YOLOv9 and DeepSORT. This system supports both a Command Line Interface (CLI) for processing video files and a Web Interface for real-time interaction.
 
 ## Features
-- **Vehicle Detection**: Detects cars, bikes, buses, and trucks using YOLOv8.
+- **Vehicle Detection**: Detects cars, bikes, buses, and trucks using YOLOv9.
 - **Tracking**: Robust object tracking with DeepSORT.
 - **Speed Estimation**: Estimates vehicle speed based on pixel displacement and perspective calibration.
 - **Noise Filtering**: Kalman Filter smoothing for stable trajectories.
@@ -45,7 +45,7 @@ python main.py --source data/your_video.mp4
 
 **Arguments:**
 - `--source`: Path to the video file or camera index (default: `data/test_video.mp4`).
-- `--model`: Path to the YOLOv8 model file (default: `yolov8n.pt`).
+- `--model`: Path to the YOLOv9 model file (default: `yolov9c.pt`).
 
 ### 2. Web Interface
 Use the Web Interface to upload videos and view the processing results in a browser.
@@ -70,3 +70,21 @@ Simply open the `frontend/index.html` file in your web browser. You can do this 
 - **ModuleNotFoundError**: Ensure you are running commands from the project root directory so that python can find the `backend` and `modules` packages.
 - **WebSocket Disconnected**: Make sure the backend server (`uvicorn`) is running before opening the frontend.
 - **Video Not Found**: If using CLI, ensure the path provided to `--source` is correct.
+
+## Publication & Licensing
+If you intend to publish this project (e.g., as an academic paper or an open-source GitHub repository), please ensure you comply with the following licensing conditions regarding the pre-trained models:
+
+- **YOLOv9 (Ultralytics)**: The YOLOv9 model used in this project is licensed under the **AGPL-3.0 License**. This means you are free to use, modify, and distribute this project for academic, educational, and open-source purposes, provided that you also open-source your code under the same AGPL-3.0 license.
+- **Commercial Use**: If you intend to use this project in a closed-source commercial product, you must obtain an Enterprise License from [Ultralytics](https://ultralytics.com/license).
+- **Academic Citation**: If this project is part of a research publication, please cite Ultralytics YOLOv9 as follows:
+  ```bibtex
+  @software{Jocher_YOLO_by_Ultralytics_2023,
+    author = {Jocher, Glenn and Chaurasia, Ayush and Qiu, Jing},
+    license = {AGPL-3.0},
+    month = jan,
+    title = {{YOLO by Ultralytics}},
+    url = {https://github.com/ultralytics/ultralytics},
+    version = {8.0.0},
+    year = {2023}
+  }
+  ```

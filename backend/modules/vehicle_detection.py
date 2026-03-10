@@ -3,15 +3,15 @@ from ultralytics import YOLO
 import numpy as np
 
 class VehicleDetector:
-    def __init__(self, model_path='yolov8n.pt', confidence_threshold=0.5):
+    def __init__(self, model_path='yolov9c.pt', confidence_threshold=0.5):
         """
-        Initialize the Vehicle Detector using YOLOv8.
+        Initialize the Vehicle Detector using YOLOv9.
         
         Args:
             model_path (str): Path to the YOLOv8 model file.
             confidence_threshold (float): Minimum confidence score for detection.
         """
-        print(f"Loading YOLOv8 model from {model_path}...")
+        print(f"Loading YOLOv9 model from {model_path}...")
         self.model = YOLO(model_path)
         self.conf_threshold = confidence_threshold
         # COCO class IDs for vehicles: 2=car, 3=motorcycle, 5=bus, 7=truck
@@ -39,6 +39,18 @@ class VehicleDetector:
                 
                 if cls_id in self.vehicle_classes and conf >= self.conf_threshold:
                     x1, y1, x2, y2 = map(int, box.xyxy[0])
+                    
+                    # --- Permanent Fix for SUV Misclassification ---
+                    # COCO models frequently misclassify SUVs/Vans as Trucks (7) or Buses (5).
+                    if cls_id in [5, 7]:
+                        w = x2 - x1
+                        h = y2 - y1
+                        aspect_ratio = w / float(h) if h > 0 else 0
+                        # 1) If the confidence isn't incredibly high, assume it's just a Car.
+                        # 2) If the bounding box is noticeably wider than it is tall, it's typically a standard Car/SUV profile.
+                        if conf < 0.85 or aspect_ratio > 1.15:
+                            cls_id = 2  # Reclassify as Car
+                    
                     detections.append([x1, y1, x2, y2, conf, cls_id])
         
         return detections
